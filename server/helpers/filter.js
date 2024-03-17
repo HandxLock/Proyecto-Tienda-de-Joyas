@@ -1,5 +1,5 @@
 const postQuery = (entity, filters) => {
-    const allowedColumns = ['nombre', 'categoria', 'precio', 'stock'];
+    const allowedColumns = ['nombre', 'categoria', 'precio', 'stock', 'metal'];
     const table = entity.toLowerCase();
     let query = `SELECT * FROM ${table} WHERE 1 = 1`;
     const values = [];
@@ -9,8 +9,10 @@ const postQuery = (entity, filters) => {
             if (!allowedColumns.includes(key)) {
                 throw new Error(`Columna "${key}" no permitida.`);
             }
-            query += ` AND ${key} = $${values.length + 1}`;
-            values.push(value);
+            if (value !== undefined && value !== null) {
+                query += ` AND ${key} = $${values.length + 1}`;
+                values.push(value);
+            }
         }
     }
     return { query, values };

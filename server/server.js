@@ -1,8 +1,9 @@
 const express = require('express');
 const cors = require('cors');
+const morgan = require('morgan');
 const postRoutes = require('./routes/joyasRoutes');
 const dotenv = require('dotenv');
-const logger = require('logger-express');
+
 
 dotenv.config();
 
@@ -13,21 +14,7 @@ if (!process.env.PORT) {
 const PORT = process.env.PORT || 3000;
 const app = express();
 
-app.use(logger.express({
-    format: 'custom', 
-    transports: ['file', 'console'], 
-    fileOptions: {
-        filename: 'app.log',
-        maxsize: 10485760,
-        maxFiles: 5,
-        timestamp: true,
-        zippedArchive: true
-    },
-    consoleOptions: {
-        colorize: true,
-        timestamp: true
-    }
-}));s
+app.use(morgan('combined'));
 
 app.use(express.json());
 app.use(cors());

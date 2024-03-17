@@ -11,7 +11,7 @@ router.get('/product_l', limitJoyas);
 router.get('/product_ol', orderAndLimitProduct);
 router.get('/hateoas', productwithHateoas);
 router.get('/pagination', productPagination)
-router.get('/filter', filterProduct)
+router.get('/filtros', filterProduct)
 
 
 module.exports = router;

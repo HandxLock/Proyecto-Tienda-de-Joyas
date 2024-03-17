@@ -27,14 +27,14 @@ exports.inventario = async (req, res) => {
 
 exports.createNewProduct = async (req, res) => {
   try {
-    const { nombre, categoria, precio, stock } = req.body;
-    if (!nombre || !categoria || !precio || !stock ||
-        typeof nombre !== 'string' || typeof categoria !== 'string' ||
+    const { nombre, categoria, metal, precio, stock } = req.body;
+    if (!nombre || !categoria || !metal || !precio || !stock ||
+        typeof nombre !== 'string' || typeof categoria !== 'string' || typeof metal !== 'string' ||
         typeof precio !== 'number' || typeof stock !== 'number' ||
         isNaN(precio) || isNaN(stock) || precio < 0 || stock < 0) {
       return res.status(400).json({ message: "Datos de producto no válidos" });
     }
-    const newProduct = await addjoyasModel(nombre, categoria, precio, stock);
+    const newProduct = await addjoyasModel(nombre, categoria, metal, precio, stock);
     return res.status(200).json(newProduct);
   } catch (error) {
     console.error(`Error al crear un nuevo producto:`, error);
@@ -45,11 +45,11 @@ exports.createNewProduct = async (req, res) => {
 
 exports.updateInventarioStock = async (req, res) => {
   try {
-    const { nombre, categoria, precio, stock, id } = req.body;
+    const { nombre, categoria, metal, precio, stock, id } = req.body;
     if (!id || isNaN(id) || parseInt(id) <= 0) {
       return res.status(400).json({ message: "ID de producto no válido" });
     }
-    if (!nombre || !categoria || isNaN(precio) || isNaN(stock)) {
+    if (!nombre || !categoria || !metal || isNaN(precio) || isNaN(stock)) {
       return res.status(400).json({ message: "Campos de producto incompletos o no válidos" });
     }
     const maxNombreLength = 255;
@@ -60,7 +60,7 @@ exports.updateInventarioStock = async (req, res) => {
     if (precio < 0 || stock < 0) {
       return res.status(400).json({ message: "Precio o stock no pueden ser negativos" });
     }
-    await updatejoyasModel(id, { nombre, categoria, precio, stock });
+    await updatejoyasModel(id, { nombre, categoria, metal, precio, stock });
     res.sendStatus(200);
   } catch (error) {
     console.error("Error al actualizar inventario:", error);
@@ -176,25 +176,22 @@ exports.productPagination = async (req, res) => {
 
 exports.filterProduct = async (req, res) => {
   try {
-    const { items, page, filters } = req.body;
-    if (!items || !page || !filters) {
-      return res.status(400).json({ message: 'Se requieren los parámetros "items", "page" y "filters".' });
+    const { categoria, metal } = req.query; 
+    if (!categoria && !metal) {
+      return res.status(400).json({ message: 'Se requiere al menos un filtro (metal o categoria).' });
     }
-    if (isNaN(items) || isNaN(page) || parseInt(items) <= 0 || parseInt(page) <= 0) {
-      return res.status(400).json({ message: 'Los valores de "items" y "page" deben ser números positivos.' });
-    }
-    console.log('filter', filters);
-    const allProduct = await filterProductModel(filters);
-    console.log('allProduct', allProduct);
-    if (!Array.isArray(allProduct) || allProduct.length === 0) {
+    const filters = { categoria, metal }; 
+    console.log('Filtros:', filters);
+    const filteredProducts = await filterProductModel(filters);
+    console.log('Productos filtrados:', filteredProducts);
+    if (!Array.isArray(filteredProducts) || filteredProducts.length === 0) {
       return res.status(404).json({ message: 'No se encontraron productos que coincidan con los filtros proporcionados.' });
     }
-    const pageData = pagination(allProduct, items, page);
-    console.log('pageData', pageData);
-    res.status(200).json(pageData)
+    res.status(200).json(filteredProducts);
   } catch (error) {
     console.error('Error al filtrar productos:', error.message);
     res.status(500).json({ message: "Error interno del servidor" });
   }
-}
+};
+
 

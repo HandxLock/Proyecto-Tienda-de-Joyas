@@ -5,7 +5,7 @@ const { postQuery } = require("../helpers/filter.js");
 
 exports.getModel = async () => {
   try {
-    const inventario = await pool.query('SELECT id, nombre, categoria, precio, stock FROM inventario');
+    const inventario = await pool.query('SELECT id, nombre, categoria, metal, precio, stock FROM inventario');
     if (!inventario || !inventario.rows || inventario.rows.length === 0) {
       throw new Error('No se encontraron productos en el inventario');
     }
@@ -27,34 +27,34 @@ exports.getProductoById = async (id) => {
   }
 }
 
-exports.addjoyasModel = async (nombre, categoria, precio, stock) => {
+exports.addjoyasModel = async (nombre, categoria, metal, precio, stock) => {
   try {
-    if (!nombre || !categoria || !precio || !stock) {
+    if (!nombre || !categoria || !metal || !precio || !stock) {
       throw new Error('Todos los campos son obligatorios');
     }
     if (isNaN(precio) || isNaN(stock) || parseFloat(precio) < 0 || parseInt(stock) < 0) {
       throw new Error('Precio y stock deben ser números válidos y positivos');
     }
-    const newProduct = await pool.query('INSERT INTO inventario (nombre, categoria, precio, stock) VALUES ($1, $2, $3, $4) RETURNING *', [nombre, categoria, precio, stock]);
+    const newProduct = await pool.query('INSERT INTO inventario (nombre, categoria, metal, precio, stock) VALUES ($1, $2, $3, $4, $5) RETURNING *', [nombre, categoria, metal, precio, stock]);
     return { message: 'Producto añadido con éxito', product: newProduct.rows[0] };
   } catch (error) {
     throw new Error(`Error al agregar producto: ${error.message}`);
   }
 }
 
-exports.updatejoyasModel = async (id, { nombre, categoria, precio, stock }) => {
+exports.updatejoyasModel = async (id, { nombre, categoria, metal, precio, stock }) => {
   try {
     if (isNaN(id) || parseInt(id) <= 0) {
       throw new Error('ID no válido');
     }
-    if (!nombre || !categoria || !precio || !stock) {
+    if (!nombre || !categoria || !metal || !precio || !stock) {
       throw new Error('Todos los campos son obligatorios');
     }
     if (isNaN(precio) || isNaN(stock) || parseFloat(precio) < 0 || parseInt(stock) < 0) {
       throw new Error('Precio y stock deben ser números válidos y positivos');
     }
-    const query = 'UPDATE inventario SET nombre=$1, categoria=$2, precio=$3, stock=$4 WHERE id=$5 RETURNING *';
-    const values = [nombre, categoria, precio, stock, id];
+    const query = 'UPDATE inventario SET nombre=$1, categoria=$2, metal=$3, precio=$4, stock=$5 WHERE id=$6 RETURNING *';
+    const values = [nombre, categoria, metal, precio, stock, id];
     const updatedProductStock = await pool.query(query, values);
     if (updatedProductStock.rows.length === 0) {
       throw new Error('Producto no encontrado');
@@ -93,7 +93,7 @@ exports.limitJoyasModel = async (limit = 10) => {
 }
 
 exports.orderAndLimitProductModel = async (order_by = 'id_DESC', limit = 10, page = 0) => {
-  const validOrders = ['id_ASC', 'id_DESC', 'nombre_ASC', 'nombre_DESC', 'categoria_ASC', 'categoria_DESC', 'precio_ASC', 'precio_DESC', 'stock_ASC', 'stock_DESC'];
+  const validOrders = ['id_ASC', 'id_DESC', 'nombre_ASC', 'nombre_DESC', 'categoria_ASC', 'categoria_DESC', 'metal_ASC', 'metal_DESC', 'precio_ASC', 'precio_DESC', 'stock_ASC', 'stock_DESC'];
   const [attribute, direction] = order_by.split('_');
   if (!validOrders.includes(order_by)) {
     throw new Error('Orden no válida');
@@ -125,14 +125,12 @@ exports.productHateoas = async () => {
 }
 
 exports.filterProductModel = async (filters) => {
-  const allowedColumns = ['nombre', 'categoria', 'precio', 'stock'];
+  const allowedColumns = ['nombre', 'categoria', 'precio', 'stock', 'metal'];
   const { query, values } = postQuery('inventario', filters);
-  const filterEntries = Object.entries(filters);
-  for (const [key] of filterEntries) {
-      if (!allowedColumns.includes(key)) {
-          throw new Error(`Columna "${key}" no permitida.`);
-      }
+  if (filters.precio_min) {
+    query += ` AND precio >= $${values.length + 1}`;
+    values.push(filters.precio_min);
   }
   const result = await pool.query(query, values);
   return result.rows;
-}
+};
