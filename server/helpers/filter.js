@@ -1,5 +1,5 @@
 const postQuery = (entity, filters) => {
-    const allowedColumns = ['nombre', 'categoria', 'precio', 'stock', 'metal'];
+    const allowedColumns = ['nombre', 'categoria', 'precio_min', 'precio_max', 'stock', 'metal'];
     const table = entity.toLowerCase();
     let query = `SELECT * FROM ${table} WHERE 1 = 1`;
     const values = [];
@@ -10,7 +10,15 @@ const postQuery = (entity, filters) => {
                 throw new Error(`Columna "${key}" no permitida.`);
             }
             if (value !== undefined && value !== null) {
-                query += ` AND ${key} = $${values.length + 1}`;
+                if(key === 'precio_min'){
+                    query += ` AND precio >= $${values.length + 1}`;
+                }
+                if(key === 'precio_max'){
+                    query += ` AND precio <= $${values.length + 1}`;
+                }
+                if(key !== 'precio_min' && key !== 'precio_max'){
+                    query += ` AND ${key} = $${values.length + 1}`;
+                }
                 values.push(value);
             }
         }

@@ -125,12 +125,7 @@ exports.productHateoas = async () => {
 }
 
 exports.filterProductModel = async (filters) => {
-  const allowedColumns = ['nombre', 'categoria', 'precio', 'stock', 'metal'];
   const { query, values } = postQuery('inventario', filters);
-  if (filters.precio_min) {
-    query += ` AND precio >= $${values.length + 1}`;
-    values.push(filters.precio_min);
-  }
   const result = await pool.query(query, values);
   return result.rows;
 };
