@@ -176,11 +176,11 @@ exports.productPagination = async (req, res) => {
 
 exports.filterProduct = async (req, res) => {
   try {
-    const { categoria, metal } = req.query; 
-    if (!categoria && !metal) {
-      return res.status(400).json({ message: 'Se requiere al menos un filtro (metal o categoria).' });
+    const { categoria, metal, precio_min, precio_max } = req.query; 
+    if (!categoria && !metal && !precio_max && !precio_min) {
+      return res.status(400).json({ message: 'Se requiere al menos un filtro (metal, categoria, precio_min, o precio_max).' });
     }
-    const filters = { categoria, metal }; 
+    const filters = { categoria, metal, precio_max, precio_min }; 
     console.log('Filtros:', filters);
     const filteredProducts = await filterProductModel(filters);
     console.log('Productos filtrados:', filteredProducts);
