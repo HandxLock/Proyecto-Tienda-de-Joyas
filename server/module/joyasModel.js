@@ -127,5 +127,6 @@ exports.productHateoas = async () => {
 exports.filterProductModel = async (filters) => {
   const { query, values } = postQuery('inventario', filters);
   const result = await pool.query(query, values);
+  //console.log('results', result);
   return result.rows;
 };
